@@ -53,6 +53,13 @@ class IncrementalExport(inkex.OutputExtension):
             image_list.append("{}.png".format(node.attrib["id"]))
 
             current_svg = node.tostring()
+
+            if "filter" in node.style:
+                filter_id = node.style["filter"][5:-1]
+                filter_node = node.root.getElementById(filter_id)
+
+                current_svg += "\n".encode() + filter_node.tostring()
+
             if os.path.exists(node_filename_svg):
                 cached_svg = ""
                 with open(node_filename_svg, "rb") as f:
@@ -74,7 +81,7 @@ class IncrementalExport(inkex.OutputExtension):
             self.options.dpi) + 
             " ".join(export_text_list))
 
-        inkex.utils.errormsg(full_export_text)
+        #inkex.utils.errormsg(full_export_text)
 
         start_export_time = datetime.datetime.now()
         
@@ -91,14 +98,17 @@ class IncrementalExport(inkex.OutputExtension):
             current_images = image_list[idx:idx + combine_object_count]
 
             raster_svg_text = self.generate_raster_svg(current_images)
-            raster_svg_name = "combine_cache_{:03}.svg".format(idx)
+            raster_svg_name = "combine_cache_{:03}.svg".format(
+                    int(idx/combine_object_count))
             raster_svg_file = os.path.join(cache_folder, raster_svg_name)
             with open(raster_svg_file, "w") as f:
                 f.write(raster_svg_text)
 
+            cache_file_name = "cache_output_{:03}.png".format(
+                    int(idx/combine_object_count))
             cache_png_file = os.path.join(
                     cache_folder, 
-                    "cache_output_{:03}.png".format(idx))
+                    cache_file_name)
 
             inkscape(
                 raster_svg_file,
@@ -107,7 +117,7 @@ class IncrementalExport(inkex.OutputExtension):
                     cache_png_file
                     ))
 
-            merged_png_files_list.append(cache_png_file)
+            merged_png_files_list.append(cache_file_name)
 
         raster_svg_text = self.generate_raster_svg(merged_png_files_list)
         raster_svg_name = "combine_cache_full.svg"
@@ -116,7 +126,7 @@ class IncrementalExport(inkex.OutputExtension):
             f.write(raster_svg_text)
 
         final_png_file = os.path.join(
-                output_folder, 
+                out_folder, 
                 "output.png")
 
         inkscape(
