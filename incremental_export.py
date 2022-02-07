@@ -50,10 +50,6 @@ class IncrementalExport(inkex.OutputExtension):
                     cache_folder, 
                     "{}.svg".format(node.attrib["id"]))
 
-            node_export_text = "export-id:{}; export-filename:{}; export-do;".format(
-                    node.attrib["id"],
-                    node_filename_png)
-
             image_list.append("{}.png".format(node.attrib["id"]))
 
             current_svg = node.tostring()
@@ -65,16 +61,22 @@ class IncrementalExport(inkex.OutputExtension):
                 if cached_svg == current_svg:
                     continue
 
+            node_export_text = "export-id:{}; export-filename:{}; export-do;".format(
+                    node.attrib["id"],
+                    node_filename_png)
+
             with open(node_filename_svg, "wb") as f:
                 f.write(current_svg)
 
             export_text_list.append(node_export_text)
 
-        full_export_text = ("export-area-page; export-id-only; export-dpi:{}".format(
+        full_export_text = ("export-area-page; export-id-only; export-dpi:{}; ".format(
             self.options.dpi) + 
             " ".join(export_text_list))
 
-        #inkex.utils.errormsg(full_export_text)
+        inkex.utils.errormsg(full_export_text)
+
+        start_export_time = datetime.datetime.now()
         
         inkscape(
             self.options.input_file,
@@ -98,11 +100,12 @@ class IncrementalExport(inkex.OutputExtension):
         end_time = datetime.datetime.now()
 
         inkex.utils.errormsg(
-            "In {} seconds exported {} objects. {} objects were already cached. {} seconds were spent linking the objects into a single output image.".format(
-                (end_export_time - start_time).total_seconds(),
+            "In {} seconds exported {} objects. {} objects were already cached. {} seconds were spent linking the objects into a single output image and {} seconds were spent on comparing cached svgs.".format(
+                (end_export_time - start_export_time).total_seconds(),
                 len(export_text_list),
                 len(visible_nodes) - len(export_text_list),
-                (end_time - end_export_time).total_seconds()))
+                (end_time - end_export_time).total_seconds(),
+                (start_export_time - start_time).total_seconds()))
 
     def generate_raster_svg(self, image_files):
 
