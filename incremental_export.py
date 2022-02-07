@@ -55,6 +55,7 @@ class IncrementalExport(inkex.OutputExtension):
             current_svg = node.tostring()
 
             if "filter" in node.style:
+                # remove url(# from beginning and ) from end of filter id
                 filter_id = node.style["filter"][5:-1]
                 filter_node = node.root.getElementById(filter_id)
 
