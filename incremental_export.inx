@@ -6,6 +6,7 @@
   <label>Export changed objects</label>
   <param name="directory" type="path" mode="folder" gui-text="Output Directory"></param>
   <param name="out_name" type="string" gui-text="Output Folder Name">project_name</param>
+  <param name="dpi" type="float" max="99999" gui-text="DPI">100</param>
 
   <effect needs-live-preview="false">
     <object-type>all</object-type>

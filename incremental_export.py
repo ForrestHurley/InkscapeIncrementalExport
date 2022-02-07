@@ -15,6 +15,8 @@ class IncrementalExport(inkex.OutputExtension):
         pars.add_argument(
             "--out_name",
             default="project_name")
+        pars.add_argument(
+            "--dpi")
     
     def save(self,stream):
 
@@ -68,7 +70,8 @@ class IncrementalExport(inkex.OutputExtension):
 
             export_text_list.append(node_export_text)
 
-        full_export_text = ("export-area-page; export-id-only; " + 
+        full_export_text = ("export-area-page; export-id-only; export-dpi:{}".format(
+            self.options.dpi) + 
             " ".join(export_text_list))
 
         #inkex.utils.errormsg(full_export_text)
@@ -87,7 +90,8 @@ class IncrementalExport(inkex.OutputExtension):
 
         inkscape(
             raster_svg_file,
-            actions="export-area-page; export-filename:{}; export-do".format(
+            actions="export-area-page; export-dpi:{}; export-filename:{}; export-do".format(
+                self.options.dpi,
                 os.path.join(out_folder,"output.png")
                 ))
 
