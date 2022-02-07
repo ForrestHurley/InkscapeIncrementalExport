@@ -84,17 +84,46 @@ class IncrementalExport(inkex.OutputExtension):
 
         end_export_time = datetime.datetime.now()
 
-        raster_svg_text = self.generate_raster_svg(image_list)
-        raster_svg_name = "combine_cache.svg"
+        merged_png_files_list = []
+
+        combine_object_count = 20
+        for idx in range(0, len(image_list), combine_object_count):
+            current_images = image_list[idx:idx + combine_object_count]
+
+            raster_svg_text = self.generate_raster_svg(current_images)
+            raster_svg_name = "combine_cache_{:03}.svg".format(idx)
+            raster_svg_file = os.path.join(cache_folder, raster_svg_name)
+            with open(raster_svg_file, "w") as f:
+                f.write(raster_svg_text)
+
+            cache_png_file = os.path.join(
+                    cache_folder, 
+                    "cache_output_{:03}.png".format(idx))
+
+            inkscape(
+                raster_svg_file,
+                actions="export-area-page; export-dpi:{}; export-filename:{}; export-do".format(
+                    self.options.dpi,
+                    cache_png_file
+                    ))
+
+            merged_png_files_list.append(cache_png_file)
+
+        raster_svg_text = self.generate_raster_svg(merged_png_files_list)
+        raster_svg_name = "combine_cache_full.svg"
         raster_svg_file = os.path.join(cache_folder, raster_svg_name)
         with open(raster_svg_file, "w") as f:
             f.write(raster_svg_text)
+
+        final_png_file = os.path.join(
+                output_folder, 
+                "output.png")
 
         inkscape(
             raster_svg_file,
             actions="export-area-page; export-dpi:{}; export-filename:{}; export-do".format(
                 self.options.dpi,
-                os.path.join(out_folder,"output.png")
+                final_png_file
                 ))
 
         end_time = datetime.datetime.now()
@@ -140,7 +169,7 @@ class IncrementalExport(inkex.OutputExtension):
     <sodipodi:namedview
         id="{}"
         pagecolor="{}"
-        inkscape:pageopacity="1" /> '''.format(
+        inkscape:pageopacity="0" /> '''.format(
             namedview.attrib["id"],
             namedview.attrib["pagecolor"]#,
             #namedview.attrib["inkscape:pageopacity"]
