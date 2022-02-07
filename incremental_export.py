@@ -41,6 +41,7 @@ class IncrementalExport(inkex.OutputExtension):
 
         export_text_list = []
         image_list = []
+        cached_svg_list = []
         for node in visible_nodes:
             
             node_filename_png = os.path.join(
@@ -73,10 +74,10 @@ class IncrementalExport(inkex.OutputExtension):
                     node.attrib["id"],
                     node_filename_png)
 
-            with open(node_filename_svg, "wb") as f:
-                f.write(current_svg)
-
             export_text_list.append(node_export_text)
+
+            cached_svg_list.append((node_filename_svg, current_svg))
+
 
         full_export_text = ("export-area-page; export-id-only; export-dpi:{}; ".format(
             self.options.dpi) + 
@@ -90,13 +91,20 @@ class IncrementalExport(inkex.OutputExtension):
             self.options.input_file,
             actions = full_export_text)
 
+        # doing this after generating the files prevents issues 
+        # due to cancelled operations
+        for node_filename_svg, current_svg in cached_svg_list:
+            with open(node_filename_svg, "wb") as f:
+                f.write(current_svg)
+
         end_export_time = datetime.datetime.now()
 
         merged_png_files_list = []
 
+        # break image list into groups of 20 images
         combine_object_count = 20
         for idx in range(0, len(image_list), combine_object_count):
-            current_images = image_list[idx:idx + combine_object_count]
+            current_images = image_list[idx:(idx + combine_object_count)]
 
             raster_svg_text = self.generate_raster_svg(current_images)
             raster_svg_name = "combine_cache_{:03}.svg".format(
